@@ -28,10 +28,11 @@ const authcontrol = (req, res, next) => {
           var newUserToken = bcrypt.hashSync(username + password, 10);
           sendTokenToClient(username, newUserToken, res);
         } else {
-            sendResponse(res,false,401,"Incorrect username or password. Please enter the correct information.");
+            sendResponse(res,false,401,"Incorrect username or password. Please enter the correct information.")
         }
       } else {
-        sendResponse(res,false,401,"Incorrect username or password. Please enter the correct information.");
+        sendResponse(res,false,401,"Incorrect username or password. Please enter the correct information."
+        );
       }
     });
   }
@@ -43,16 +44,17 @@ const emailcontrol = (req, res, next) => {
   database.query(sql, function (err, result) {
     if (err) throw err;
     if (result.length > 0) {
-      res.send("email already exist");
+      var newUserToken = bcrypt.hashSync(username + googlesubid, 10);
+      sendTokenToClient(username, newUserToken, res);
     } else {
       database.query(
         `INSERT INTO users (username,googlesubid) VALUES ('${username}', '${googlesubid}')`,
         function (err, result) {
           if (err) throw err;
-          console.log("1 record inserted");
+          var newUserToken = bcrypt.hashSync(username + googlesubid, 10);
+          sendTokenToClient(username, newUserToken, res);
         }
       );
-      res.send("email not found, added to database");
     }
   });
 };

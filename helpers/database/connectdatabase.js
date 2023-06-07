@@ -1,11 +1,11 @@
 var mysql = require('mysql');
 
 var con = mysql.createConnection({
-  host: "127.0.0.1",
+  host: "127.0.0.1", // localhost
   port:"3306",
   database:"iot_control",
-  user: "root",
-  password: ""
+  user: "root", // myuser
+  password: "" // 1234
 });
 
 con.connect(function(err) {
