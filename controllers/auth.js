@@ -1,62 +1,79 @@
-const express = require("express")
-const router = express.Router()
-const database = require("../helpers/connectdatabase")
-var bcrypt = require('bcryptjs');
+const express = require("express");
+const router = express.Router();
+const database = require("../helpers/database/connectdatabase");
+var bcrypt = require("bcryptjs");
+const sendTokenToClient = require("../helpers/authorization/sendTokenToClient");
+const sendResponse = require("../helpers/sendResponse/sendResponse");
 
-const authcontrol = (req,res,next) =>{
+const authcontrol = (req, res, next) => {
+  const { username, password, usertoken } = req.body;
 
-    const {username,password} = req.body;
-    var sql = "SELECT * FROM users WHERE username = '"+username+"'";
+  if (usertoken != undefined) {
+    var sql = "SELECT * FROM users WHERE usertoken = '" + usertoken + "'";
+
     database.query(sql, function (err, result) {
-        if (err) throw err;
-        if(result.length > 0){
-            if(bcrypt.compareSync(password, result[0].password)){
-                res.setHeader('Content-Type', 'application/json');
-                res.send(JSON.stringify({key:"value"}));
-            }else{
-                res.setHeader('Content-Type', 'application/json');
-                res.send(JSON.stringify({key:"value"}));
-            }
-        }else{
-            res.send("user not found")
-        }
-      } 
-    );
-}
-
-const emailcontrol = (req,res,next) =>{
-    const {username,googlesubid} = req.body;
-    var sql = `SELECT * FROM users WHERE username = '${username}' and googlesubid = '${googlesubid}'`
+      if (err) throw err;
+      if (result.length > 0) {
+        sendTokenToClient(username, usertoken, res);
+      } else {
+        sendResponse(res, false, 401, "userToken not found");
+      }
+    });
+  } else {
+    var sql = "SELECT * FROM users WHERE username = '" + username + "'";
     database.query(sql, function (err, result) {
-        if (err) throw err;
-        if(result.length > 0){
-            res.send("email already exist")
-        }else{
-            
-            database.query(`INSERT INTO users (username,googlesubid) VALUES ('${username}', '${googlesubid}')`, function (err, result) {
-                if (err) throw err;
-                console.log("1 record inserted");
-              }
-            );
-            res.send("email not found, added to database")
+      if (err) throw err;
+      if (result.length > 0) {
+        if (bcrypt.compareSync(password, result[0].password)) {
+          var newUserToken = bcrypt.hashSync(username + password, 10);
+          sendTokenToClient(username, newUserToken, res);
+        } else {
+            sendResponse(res,false,401,"Incorrect username or password. Please enter the correct information.");
         }
+      } else {
+        sendResponse(res,false,401,"Incorrect username or password. Please enter the correct information.");
+      }
+    });
+  }
+};
+
+const emailcontrol = (req, res, next) => {
+  const { username, googlesubid } = req.body;
+  var sql = `SELECT * FROM users WHERE username = '${username}' and googlesubid = '${googlesubid}'`;
+  database.query(sql, function (err, result) {
+    if (err) throw err;
+    if (result.length > 0) {
+      res.send("email already exist");
+    } else {
+      database.query(
+        `INSERT INTO users (username,googlesubid) VALUES ('${username}', '${googlesubid}')`,
+        function (err, result) {
+          if (err) throw err;
+          console.log("1 record inserted");
         }
-    );
-}
+      );
+      res.send("email not found, added to database");
+    }
+  });
+};
 
-const register = (req,res,next) =>{
-    
-    const {username,password} = req.body;
-    var hash = bcrypt.hashSync(password, 10);
+const register = (req, res, next) => {
+  const { username, password } = req.body;
+  var hashPassword = bcrypt.hashSync(password, 10);
+  var userToken = bcrypt.hashSync(username + password, 10);
 
-    var sql = "INSERT INTO users (username, password) VALUES ('"+username+"', '"+hash+"')";
-    database.query(sql, function (err, result) {
-        if (err) throw err;
-        res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify({result:"success"}));
-      });
-  
+  var sql =
+    "INSERT INTO users (username, password,usertoken) VALUES ('" +
+    username +
+    "', '" +
+    hashPassword +
+    "', '" +
+    userToken +
+    "')";
+  database.query(sql, function (err, result) {
+    if (err) throw err;
+    sendTokenToClient(username, userToken, res);
+  });
+};
 
-}
-
-module.exports = {authcontrol,register,emailcontrol};
+module.exports = { authcontrol, register, emailcontrol };

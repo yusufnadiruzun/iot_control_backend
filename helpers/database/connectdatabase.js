@@ -4,8 +4,8 @@ var con = mysql.createConnection({
   host: "127.0.0.1",
   port:"3306",
   database:"iot_control",
-  user: "myuser",
-  password: "1234"
+  user: "root",
+  password: ""
 });
 
 con.connect(function(err) {
