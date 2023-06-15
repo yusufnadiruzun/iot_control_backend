@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { sendResponse } = require("../helpers/sendResponse/sendResponse");
+const sendResponse  = require("../helpers/sendResponse/sendResponse");
 
 const getAccessToRoute = async (req, res, next) => {
   // Is Token Included

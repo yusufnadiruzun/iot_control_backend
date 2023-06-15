@@ -19,7 +19,6 @@ const login = async (req, res) => {
   const {name,mail,password,googlesubid,usertoken} = req.body;
 
   if(mail != "" && password != "" && usertoken == ""){
-  console.log("ilk if ")
   logindb(mail, password)
     .then((result) => sendTokenToClient(result[0],result[1],result[2], res))
     .catch((err) => sendResponse(res, false, 400, err));
