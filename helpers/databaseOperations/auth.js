@@ -3,15 +3,22 @@ const bcrypt = require("bcryptjs");
 
 const signupdb = (name,surname,mail,hashpassword,phone,usertoken) => {
   return new Promise((resolve, reject) => {
-    var query =
+    var query = "SELECT * FROM users where mail='" + mail + "'";
+    connection.query(query, function (err, result) {
+      if (err) throw err;
+      if (result.length != 0) {
+        reject("Bu mail adresi zaten kayıtlı");
+      } else {  
+    query =
       "INSERT INTO users (name, surname,mail,password,phone, usertoken) VALUES ('" +name +"', '" +surname +"', '" +mail +"', '" +hashpassword +
       "', '" +phone +"', '" +usertoken +"')";
     connection.query(query, function (err, result) {
       if (err) throw err;
       resolve(true);
-    });
-  });
-};
+    })
+  }})
+})
+} 
 
 const logindb = (mail, password) => {
   return new Promise((resolve, reject) => {

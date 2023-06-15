@@ -1,4 +1,3 @@
-
 const sendResponse = require("../helpers/sendResponse/sendResponse");
 const { logindb, signupdb,loginTokendb, loginMaildb } = require("../helpers/databaseOperations/auth");
 const {generateUserToken,sendTokenToClient} = require("../helpers/authorization/sendTokenToClient");
@@ -11,12 +10,12 @@ const signup = async (req, res) => {
   let usertoken =generateUserToken(name, password);
   return signupdb(name,surname, mail,hashPassword,phone,usertoken)
     .then((result) => sendTokenToClient(name,surname,usertoken,res))
-    .catch((err) =>  console.log(err));
+    .catch((err) =>  sendResponse(res, false, 400, err));
 };
 
 const login = async (req, res) => {
 
-  const {name,mail,password,googlesubid,usertoken} = req.body;
+  const {mail,password,usertoken} = req.body;
 
   if(mail != "" && password != "" && usertoken == ""){
   logindb(mail, password)

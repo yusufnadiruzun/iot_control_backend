@@ -6,6 +6,4 @@ const {setLamp} = require("../controllers/lamp");
 
 router.post("/v1/set", getAccessToRoute, setLamp);
 
-
-
 module.exports = router
