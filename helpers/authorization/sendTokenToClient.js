@@ -8,17 +8,18 @@ const generateJwsFromUser = (name) => {
     name: name,
   };
   const token = jwt.sign(payload, JWT_SECRET_KEY, { expiresIn: JWT_EXPIRE });
+  
   return token;
 };
 
-const generateUserToken = (phone, password) => {
-    return bcrypt.hashSync(phone + password, 10);     
+const generateUserToken = (name, password) => {
+    return bcrypt.hashSync(name + password, 10);     
 };
 
-const sendTokenToClient = (phone,userToken ,res) => {
+const sendTokenToClient = (name,surname,userToken ,res) => {
 
   const { JWT_EXPIRE, NODE_ENV } = process.env;
-  const jwtToken = generateJwsFromUser(phone);
+  const jwtToken = generateJwsFromUser(name);
     
   return res
   .status(200)
@@ -28,8 +29,9 @@ const sendTokenToClient = (phone,userToken ,res) => {
       secure: NODE_ENV === "development" ? false : true,
     })
     .json({
-      success: true,
-      jwt_token: jwtToken,
+      status: "success",
+      name: name,
+      surname: surname,
       userToken: userToken,
     });
 };

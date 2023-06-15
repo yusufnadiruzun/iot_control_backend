@@ -5,7 +5,7 @@ var con = mysql.createConnection({
   port:"3306",
   database:"iot_control",
   user:  "root",//"server : myuser" local : root, //
-  password: "" // server : 1234 local : "" //
+  password: "1234" // server : 1234 local : "" //
 });
 
 con.connect(function(err) {

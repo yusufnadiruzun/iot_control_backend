@@ -1,11 +1,11 @@
 const connection = require("../database/connectdatabase");
 const bcrypt = require("bcryptjs");
 
-const signupdb = (name,surname,mail,hashpassword,googlesubid,usertoken) => {
+const signupdb = (name,surname,mail,hashpassword,phone,usertoken) => {
   return new Promise((resolve, reject) => {
     var query =
-      "INSERT INTO users (name, surname,mail,password,googlesubid, usertoken) VALUES ('" +name +"', '" +surname +"', '" +mail +"', '" +hashpassword +
-      "', '" +googlesubid +"', '" +usertoken +"')";
+      "INSERT INTO users (name, surname,mail,password,phone, usertoken) VALUES ('" +name +"', '" +surname +"', '" +mail +"', '" +hashpassword +
+      "', '" +phone +"', '" +usertoken +"')";
     connection.query(query, function (err, result) {
       if (err) throw err;
       resolve(true);
@@ -13,16 +13,17 @@ const signupdb = (name,surname,mail,hashpassword,googlesubid,usertoken) => {
   });
 };
 
-const logindb = (name, password) => {
+const logindb = (mail, password) => {
   return new Promise((resolve, reject) => {
-    let query = `SELECT * FROM users where name='${name}'`;
+    let query = `SELECT * FROM users where mail='${mail}'`;
     connection.query(query, function (err, result) {
       if (err) throw err;
       if (result.length == 0) {
         reject("Kullanıcı adı veya şifre hatalı");
       } else {
         if (bcrypt.compareSync(password, result[0].password)) {
-          resolve(true);
+          let array = [result[0].name,result[0].surname,result[0].usertoken];
+          resolve(array);
         } else {
           reject("Kullanıcı adı veya şifre hatalı");
         }
@@ -30,15 +31,16 @@ const logindb = (name, password) => {
     });
   });
 };
-const loginMaildb = (mail, googlesubid) => {
+const loginMaildb = (mail) => {
   return new Promise((resolve, reject) => {
-    let query = `SELECT * FROM users where mail='${mail}' and googlesubid='${googlesubid}'`;
+    let query = `SELECT * FROM users where mail='${mail}'`;
     connection.query(query, function (err, result) {
       if(err) throw err;
       if(result.length == 0) {
         reject("mail bulunamadı");
       } else {
-        resolve(true); 
+        let array = [result[0].name,result[0].surname,result[0].usertoken];
+        resolve(array);
       }
     });
   });
@@ -53,9 +55,7 @@ const loginTokendb = (usertoken) => {
         reject("userToken not found");
       } else {
         for (let i = 0; i < result.length; i++) {
-          console.log(usertoken, result[i].usertoken)
-          if (usertoken ==  result[i].usertoken) {
-            console.log(usertoken, result[i].usertoken) 
+          if (usertoken==result[i].usertoken) {
             resolve(result[i]);
             return;
           }
