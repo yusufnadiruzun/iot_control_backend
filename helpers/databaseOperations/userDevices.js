@@ -1,114 +1,129 @@
 const connection = require("../../helpers/database/connectdatabase");
 
-const addDeviceDb = async (
-  usertoken,
-  deviceName,
-  deviceIp,
-  deviceChannel,
-  bridgeId
-) => {
+const getUserByToken = (usertoken) => {
   return new Promise((resolve, reject) => {
-    let query = `SELECT * FROM users where usertoken='${usertoken}'`;
+    let query = `SELECT * FROM users WHERE usertoken='${usertoken}'`;
     connection.query(query, function (err, result) {
       if (err) {
         reject(err);
       } else {
-        if (result.length == 0) {
-          reject("usertoken bulunamadi");
+        if (result.length === 0) {
+          reject("Usertoken bulunamadı");
         } else {
-          let userId = result[0].user_id;
-          let deviceQuery = `SELECT * FROM userDevices WHERE user_id = '${userId}' AND deviceName='${deviceName}'`;
-          connection.query(deviceQuery, function (err, deviceResult) {
-            if (err) {
-              reject(err);
-            } else {
-              if (deviceResult.length != 0) {
-                reject("Bu cihaz zaten kayıtlı");
-              } else {
-                let insertQuery = `INSERT INTO userDevices (user_id, deviceName, deviceIp, deviceChannel, bridgeId) VALUES ('${userId}','${deviceName}','${deviceIp}','${deviceChannel}','${bridgeId}')`;
-                connection.query(insertQuery, function (err, insertResult) {
-                  if (err) {
-                    reject(err);
-                  } else {
-                    resolve(true);
-                  }
-                });
-              }
-            }
-          });
+          resolve(result[0].user_id);
         }
       }
     });
   });
 };
 
-const getDevicesDb = async (usertoken) => {
-    return new Promise((resolve, reject) => {
-        let query = `SELECT * FROM users where usertoken='${usertoken}'`;
-        connection.query(query, function (err, result) {
-            if (err) {
-                reject(err);
-            } else {
-                if (result.length == 0) {
-                    reject("usertoken bulunamadi");
-                } else {
-                    let userId = result[0].user_id;
-                    let deviceQuery = `SELECT * FROM userDevices WHERE user_id = '${userId}'`;
-                    connection.query(deviceQuery, function (err, deviceResult) {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            if (deviceResult.length != 0) {
-                                resolve(deviceResult);
-                            } else {
-                                reject("Cihaz bulunamadi");
-                            
-                            }
-                        }
-                    });
-                }
-            }
-        });
+const getDeviceIdByName = (deviceName) => {
+  return new Promise((resolve, reject) => {
+    let query = `SELECT * FROM devices WHERE deviceName='${deviceName}'`;
+    connection.query(query, function (err, result) {
+      if (err) {
+        reject(err);
+      } else {
+        if (result.length === 0) {
+          reject("Cihaz bulunamadı");
+        } else {
+          resolve(result[0].device_id);
+        }
+      }
     });
+  });
 };
 
-const deleteDevicesDb = async (usertoken, deviceName) => {
-    return new Promise((resolve, reject) => {
-        let query = `SELECT * FROM users where usertoken='${usertoken}'`;
-        connection.query(query, function (err, result) {
-            if (err) {
-                reject(err);
-            } else {
-                if (result.length == 0) {
-                    reject("usertoken bulunamadi");
-                } else {
-                    let userId = result[0].user_id;
-                    let deviceQuery = `SELECT * FROM userDevices WHERE user_id = '${userId}' AND deviceName='${deviceName}'`;
-                    connection.query(deviceQuery, function (err, deviceResult) {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            if (deviceResult.length != 0) {
-                                let deleteQuery = `DELETE FROM userDevices WHERE user_id = '${userId}' AND deviceName='${deviceName}'`;
-                                connection.query(deleteQuery, function (err, deleteResult) {
-                                    if (err) {
-                                        reject(err);
-                                    } else {
-                                        resolve(true);
-                                    }
-                                });
-                            } else {
-                                reject("Cihaz bulunamadi");
-                            }
-                        }
-                    });
-                }
-            }
-        });
+const checkDeviceUserRelationship = (userId, deviceId) => {
+  return new Promise((resolve, reject) => {
+    let query = `SELECT * FROM usersDevices WHERE user_id='${userId}' AND device_id='${deviceId}'`;
+    connection.query(query, function (err, result) {
+      if (err) {
+        reject(err);
+      } else {
+        if (result.length !== 0) {
+          reject("Bu cihaz zaten kayıtlı");
+        } else {
+          resolve();
+        }
+      }
     });
+  });
 };
 
+const addUserDeviceRelationship = (userId, deviceId) => {
+  return new Promise((resolve, reject) => {
+    let query = `INSERT INTO usersDevices (user_id, device_id) VALUES ('${userId}', '${deviceId}')`;
+    connection.query(query, function (err, result) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+};
+
+const addDeviceUserDb = async (usertoken, deviceName) => {
+  try {
+    const userId = await getUserByToken(usertoken);
+    const deviceId = await getDeviceIdByName(deviceName);
+    await checkDeviceUserRelationship(userId, deviceId);
+    await addUserDeviceRelationship(userId, deviceId);
+    return true;
+  } catch (err) {
+    throw err;
+  }
+};
+
+const getUserDevices = (userId) => {
+  return new Promise((resolve, reject) => {
+    let query = `
+      SELECT d.deviceName, d.deviceIp, d.deviceChannel
+      FROM devices AS d
+      INNER JOIN usersDevices AS ud ON d.device_id = ud.device_id
+      WHERE ud.user_id = '${userId}'
+    `;
+    connection.query(query, function (err, result) {
+      if (err) {
+      return  reject(err);
+      } else {
+      
+        return resolve(result);
+      }
+    });
+  });
+};
+
+const getUserDevicesDb = async (usertoken) => {
+  const userId = await getUserByToken(usertoken);
+  const userDevices = await getUserDevices(userId);
+  return userDevices;
+};
+
+const deleteDevice = (userId, deviceId) => {
+  return new Promise((resolve, reject) => {
+    let query = `DELETE FROM usersDevices WHERE user_id = '${userId}' AND device_id = '${deviceId}'`;
+    connection.query(query, function (err, result) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(true);
+      }
+    });
+  });
+};
+
+const deleteUserDeviceDb = async (usertoken, deviceName) => {
+
+    const userId = await getUserByToken(usertoken);
+    const deviceId = await getDeviceIdByName(deviceName);
+    deleteDevice(userId, deviceId);
+}
 
 
-
-module.exports = { addDeviceDb , getDevicesDb,deleteDevicesDb};
+module.exports = {
+  addDeviceUserDb,
+  getUserDevicesDb,
+  deleteUserDeviceDb,
+};

@@ -29,7 +29,7 @@ const logindb = (mail, password) => {
         reject("Kullanıcı adı veya şifre hatalı");
       } else {
         if (bcrypt.compareSync(password, result[0].password)) {
-          let array = [result[0].name,result[0].surname,result[0].usertoken];
+          let array = [result[0].mail,result[0].name,result[0].surname,result[0].usertoken];
           resolve(array);
         } else {
           reject("Kullanıcı adı veya şifre hatalı");
@@ -44,10 +44,11 @@ const loginMaildb = (mail) => {
     connection.query(query, function (err, result) {
       if(err) throw err;
       if(result.length == 0) {
-        reject("mail bulunamadı");
+       return reject("mail bulunamadı");
       } else {
-        let array = [result[0].name,result[0].surname,result[0].usertoken];
-        resolve(array);
+        
+        let array = [result[0].mail,result[0].name,result[0].surname,result[0].usertoken];
+        return resolve(array);
       }
     });
   });

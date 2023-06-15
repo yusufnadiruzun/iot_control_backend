@@ -8,9 +8,10 @@ const signup = async (req, res) => {
   const {name,surname,mail,password,phone} = req.body;
   let hashPassword = bcrypt.hashSync(password, 10);
   let usertoken =generateUserToken(name, password);
+  
   return signupdb(name,surname, mail,hashPassword,phone,usertoken)
     .then((result) => sendTokenToClient(name,surname,usertoken,res))
-    .catch((err) =>  sendResponse(res, false, 400, err));
+    .catch((err) =>  sendResponse(res, "unsuccess", 400, err));
 };
 
 const login = async (req, res) => {
@@ -19,16 +20,16 @@ const login = async (req, res) => {
 
   if(mail != "" && password != "" && usertoken == ""){
   logindb(mail, password)
-    .then((result) => sendTokenToClient(result[0],result[1],result[2], res))
-    .catch((err) => sendResponse(res, false, 400, err));
+    .then((result) => sendTokenToClient(result[0],result[1],result[2],result[3], res))
+    .catch((err) => sendResponse(res, "unsuccess", 400, err));
   }
   else if(mail != "" && usertoken == ""){
-    loginMaildb(mail).then((result) => sendTokenToClient(result[0],result[1],result[2], res))
-    .catch((err) => sendResponse(res, false, 400, err));
+    loginMaildb(mail).then((result) => sendTokenToClient(result[0],result[1],result[2],result[3], res))
+    .catch((err) => sendResponse(res, "unsuccess", 400, err));
   }else{
     loginTokendb(usertoken)
-    .then((result) => sendTokenToClient(result.name,result.surname, result.usertoken, res))
-    .catch((err) => sendResponse(res, false, 400, err));
+    .then((result) => sendTokenToClient(result.mail,result.name,result.surname, result.usertoken, res))
+    .catch((err) => sendResponse(res, "unsuccess", 400, err));
   } 
 };
 

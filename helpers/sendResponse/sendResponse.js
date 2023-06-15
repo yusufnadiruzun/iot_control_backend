@@ -1,7 +1,7 @@
 const sendResponse = (res,success,statusCode, data) => {
 
    return res.status(statusCode).json({
-        success: success,
+        status: success,
         data: data
     })
 }
