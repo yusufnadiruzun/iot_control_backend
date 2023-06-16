@@ -10,7 +10,7 @@ const signup = async (req, res) => {
   let usertoken =generateUserToken(name, password);
   
   return signupdb(name,surname, mail,hashPassword,phone,usertoken)
-    .then((result) => sendTokenToClient(name,surname,usertoken,res))
+    .then((result) => sendTokenToClient(mail,name,surname,usertoken,res))
     .catch((err) =>  sendResponse(res, "unsuccess", 400, err));
 };
 
